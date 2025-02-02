@@ -1,0 +1,60 @@
+# This .gitignore file is for Unity projects
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Unity generated files
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+UserSettings/
+
+# Asset meta data should only be ignored when the corresponding asset is also ignored
+!*.meta
+
+# Unity3D generated file on crash reports
+sysinfo.txt
+
+# Auto-generated VS/JetBrains Rider project files
+.vscode/
+.vs
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# Rider specific
+.idea/
+*.sln.iml
+
+# Cache and temporary files
+*.stackdump
+*.log
+*.bak
+*.backup
+*.tmp
+
+# Unity Cloud Build
+/[Cc]ache/
+
+# Build artifacts
+*.apk
+*.aab
+*.unitypackage
+
+# Crash and error logs
+crashlytics-build.properties
+
+# Collaborate files
+.collab/

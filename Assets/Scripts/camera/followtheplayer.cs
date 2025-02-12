@@ -25,6 +25,10 @@ public class SmoothObjectFollow : MonoBehaviour
 
     public void CallTurn()
     {
+        if (_turnCoroutine != null)
+        {
+            StopCoroutine(_turnCoroutine); // Cancel ongoing transition
+        }
         _turnCoroutine = StartCoroutine(FlipYLerp());
     }
 
@@ -46,6 +50,6 @@ public class SmoothObjectFollow : MonoBehaviour
     private float DetermineEndRotation()
     {
         _isFacingRight = !_isFacingRight;
-        return _isFacingRight ? 180f : 0f;
+        return _isFacingRight ? 0f : 180f;
     }
 }

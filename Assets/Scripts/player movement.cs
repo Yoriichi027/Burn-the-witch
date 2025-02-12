@@ -13,6 +13,8 @@ public class playermovement : MonoBehaviour
     public Rigidbody2D body;
     public float groundspeed;
     public float jumpspeed;
+    
+  
     [Range(0f,1f)]
     public float grounddecay;
 
@@ -42,21 +44,31 @@ public class playermovement : MonoBehaviour
     void getinput(){
         xinput = Input.GetAxis("Horizontal");
     }
-    void MoveWithInput(){
-        if(Mathf.Abs(xinput)>0){
-            float increment = xinput * accelaration;
-            float newspeed =Mathf.Clamp(body.linearVelocity.x + increment,-groundspeed ,groundspeed );
-            body.linearVelocity = new Vector2(newspeed ,body.linearVelocity.y);
-        }
+   void MoveWithInput()
+{
+    if (Mathf.Abs(xinput) > 0)
+    {
+        float increment = xinput * accelaration * Time.fixedDeltaTime; // Scale acceleration by time
+        float targetSpeed = xinput * groundspeed; // Ensure speed always aims for the correct direction
+        float newspeed = Mathf.Lerp(body.linearVelocity.x, targetSpeed, accelaration * Time.fixedDeltaTime);
         
+        body.linearVelocity = new Vector2(newspeed, body.linearVelocity.y);
+    }
+}
+
+  
+void jump()
+{
+    if (Input.GetButtonDown("Jump") && grounded)
+    {
+        body.linearVelocity = new Vector2(body.linearVelocity.x, jumpspeed);
     }
 
-    void jump(){
-        if(Input.GetButtonDown("Jump") && grounded){
-            body.linearVelocity = new Vector2(body.linearVelocity.x, jumpspeed);
-        }
+    if (Input.GetButtonUp("Jump") && body.linearVelocity.y > 0) 
+    {
+        body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y * 0.5f); 
     }
-
+}
  
 
     private void Checkground()
@@ -78,20 +90,17 @@ public class playermovement : MonoBehaviour
             Turn();
         }
     }
-   void Turn()
+  void Turn()
 {
-    if (IsFacingRight)
-    {
-        transform.rotation = Quaternion.Euler(0, 180f, 0);
-        //turn the camera follow  object 
-        followobkject.CallTurn();
-    }
-    else
-    {
-        transform.rotation = Quaternion.Euler(0, 0, 0);
-        followobkject.CallTurn();
-    }
-    IsFacingRight = !IsFacingRight;
+    IsFacingRight = !IsFacingRight; // Swap direction first
+
+    transform.rotation = Quaternion.Euler(0, IsFacingRight ? 0f : 180f, 0);
+
+    // Flip camera smoothly
+    followobkject.CallTurn();
+
+    // Flip velocity to prevent lingering rightward motion
+    body.linearVelocity = new Vector2(-body.linearVelocity.x, body.linearVelocity.y);
 }
 
 }

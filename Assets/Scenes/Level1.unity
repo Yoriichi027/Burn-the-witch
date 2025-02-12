@@ -293,7 +293,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.35, y: -1.96, z: -10}
+  m_LocalPosition: {x: -1.3500001, y: -1.96, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1701,7 +1701,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.21645692, y: 1.1546257}
+  m_Offset: {x: 0.21645692, y: 1.1546253}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -1711,7 +1711,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.5170732, y: 1.0243082}
+  m_Size: {x: 0.5170732, y: 1.0243089}
   m_EdgeRadius: 0
 --- !u!1 &1884053863
 GameObject:
@@ -1755,7 +1755,7 @@ MonoBehaviour:
       Size: {x: 0.8, y: 0.8}
       Offset: {x: 0, y: 0}
   CenterOnActivate: 1
-  TargetOffset: {x: -1, y: 0, z: 0}
+  TargetOffset: {x: 1, y: 0, z: 0}
   Damping: {x: 1, y: 1, z: 1}
   Lookahead:
     Enabled: 0
@@ -1814,7 +1814,7 @@ Transform:
   m_GameObject: {fileID: 1884053863}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.35, y: -1.96, z: -10}
+  m_LocalPosition: {x: -1.3500001, y: -1.96, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1956,11 +1956,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   followobjectgo: {fileID: 2074064721}
-  accelaration: 0.29
+  accelaration: 80
   body: {fileID: 1945674973}
-  groundspeed: 5
-  jumpspeed: 10
-  grounddecay: 0.43
+  groundspeed: 6.7
+  jumpspeed: 14
+  grounddecay: 0.91
   groundcheck: {fileID: 1705421312}
   groundmask:
     serializedVersion: 2
@@ -1982,7 +1982,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 2.4
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

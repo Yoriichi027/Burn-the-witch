@@ -1,6 +1,7 @@
 using System;
 using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 public class playermovement : MonoBehaviour
@@ -10,9 +11,12 @@ public class playermovement : MonoBehaviour
     [Header("Flip Rotation Stats")]
     [SerializeField] private GameObject followobjectgo;
     public float accelaration;
+    [SerializeField] float fallmultiplyer;
     public Rigidbody2D body;
     public float groundspeed;
+   
     public float jumpspeed;
+    
     
   
     [Range(0f,1f)]
@@ -22,6 +26,7 @@ public class playermovement : MonoBehaviour
     public LayerMask groundmask;
    
     public bool grounded;
+    Vector2 vecgravity;
     public bool IsFacingRight;
     private SmoothObjectFollow followobkject;
    
@@ -67,6 +72,9 @@ void jump()
     if (Input.GetButtonUp("Jump") && body.linearVelocity.y > 0) 
     {
         body.linearVelocity = new Vector2(body.linearVelocity.x, body.linearVelocity.y * 0.5f); 
+    }
+    if(body.linearVelocityY < 0 ){
+        body.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallmultiplyer - 1) * Time.deltaTime;
     }
 }
  

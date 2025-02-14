@@ -33,6 +33,8 @@ public class playermovement : MonoBehaviour
     float xinput;
     void Start(){
         followobkject=followobjectgo.GetComponent<SmoothObjectFollow>();
+        // Determine if the sprite starts facing right based on rotation
+        IsFacingRight = transform.rotation.eulerAngles.y == 0;
     }
     void Update()
     {

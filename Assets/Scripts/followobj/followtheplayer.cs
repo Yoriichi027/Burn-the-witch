@@ -11,6 +11,12 @@ public class SmoothObjectFollow : MonoBehaviour
     private playermovement _player;
     private bool _isFacingRight;
 
+    private void Start()
+{
+    // Ensure the camera starts with the correct rotation
+    _isFacingRight = _player.IsFacingRight;
+    transform.rotation = Quaternion.Euler(0f, _isFacingRight ? 0f : 180f, 0f);
+}
     private void Awake()
     {
         _player = _playerTransform.gameObject.GetComponent<playermovement>();

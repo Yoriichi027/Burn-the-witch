@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEditor.Callbacks;
@@ -17,7 +18,12 @@ public class playermovement : MonoBehaviour
    
     public float jumpspeed;
     
-    
+    [Header ("Dashing")]
+    private bool IsDashing;
+    public bool CanDash = true;
+    public float Dashing_power;
+    public float Dashing_time;
+    public float Dasing_cooldown;
   
     [Range(0f,1f)]
     public float grounddecay;
@@ -40,12 +46,17 @@ public class playermovement : MonoBehaviour
     {
       getinput();
       jump();
-       
+      if (Input.GetKeyDown(KeyCode.LeftShift)&& CanDash)
+      {
+         StartCoroutine(dash());
+
+      }; 
     }
-       void FixedUpdate(){
+    void FixedUpdate()
+    {
         Checkground();
-        ApplyFriction();
         Turncheck();
+        ApplyFriction();
         MoveWithInput();
     }   
     void getinput(){
@@ -53,7 +64,7 @@ public class playermovement : MonoBehaviour
     }
    void MoveWithInput()
 {
-    if (Mathf.Abs(xinput) > 0)
+    if (Mathf.Abs(xinput) > 0 && !IsDashing)
     {
         float increment = xinput * accelaration * Time.fixedDeltaTime; // Scale acceleration by time
         float targetSpeed = xinput * groundspeed; // Ensure speed always aims for the correct direction
@@ -85,11 +96,13 @@ void jump()
     {
       grounded = Physics2D.OverlapAreaAll(groundcheck.bounds.min, groundcheck.bounds.max, groundmask).Length > 0;  
     }
-    void ApplyFriction(){
-         if(grounded && xinput==0 && body.linearVelocity.y<=0){
-        body.linearVelocity*= grounddecay;
-        }
-    } 
+ void ApplyFriction()
+{
+    if (grounded && xinput == 0 && body.linearVelocity.y <= 0 && !IsDashing)
+    {
+        body.linearVelocity *= grounddecay;
+    }
+}
   private void Turncheck(){
         getinput();
         if(xinput >0 && !IsFacingRight){
@@ -111,6 +124,27 @@ void jump()
 
     // Flip velocity to prevent lingering rightward motion
     body.linearVelocity = new Vector2(-body.linearVelocity.x, body.linearVelocity.y);
+}
+
+
+private System.Collections.IEnumerator dash(){
+    CanDash = false;
+    IsDashing = true;
+    
+    float original_gravity = body.gravityScale;
+    body.gravityScale = 0; // Disable gravity
+
+    float direction = IsFacingRight ? 1f : -1f;
+    body.linearVelocity = new Vector2(direction * (float)Dashing_power, 0f); // Ensure constant dash speed
+
+    yield return new WaitForSeconds(Dashing_time);
+
+    body.linearVelocity = Vector2.zero; // 💥 Force stop movement after dash
+    body.gravityScale = original_gravity; // Restore gravity
+    IsDashing = false;
+
+    yield return new WaitForSeconds(Dasing_cooldown);
+    CanDash = true;
 }
 
 }

@@ -3,107 +3,206 @@ using UnityEngine;
 
 public class EnemyGroundBeetle : MonoBehaviour
 {
-    public enum BeetleState { Roaming, Chasing, Dashing }
-    private BeetleState currentState = BeetleState.Roaming;
+    // Basic movement & states
+    public float Movement_speed;
+    public float CircleRadius;
+    public Rigidbody2D Enemy_RB;
+    public GameObject GroundCheck;
+    public LayerMask GroundLayer;
+    public bool FacingRight;
+    public bool IsGrounded;
+    
+    private bool isAttacking;
+    private bool isChasing;
+    private float timeSinceLastSeen = 0f;
+    public float lostPlayerTime = 3f; // Time before giving up chase
 
-    [Header("Movement Settings")]
-    public float roamSpeed = 2f;
-    public float chaseSpeed = 3.5f;
-    public float dashSpeed = 10f;
-    public float dashDuration = 0.5f;
-    public float dashCooldown = 2f;
-
-    [Header("Detection Settings")]
-    public Transform player;
-    public float detectionRange = 5f;
-    public float attackRange = 2f;
-
-    [Header("Other Settings")]
-    public Rigidbody2D rb;
-    public BoxCollider2D visionCollider;
-    private bool canDash = true;
-    private Vector2 roamDirection = Vector2.right;
+    // Player detection
+    public float DetectionRange;
+    public Transform Player;
+    public LayerMask PlayerLayer;
+    
+    // Attack properties
+    public float AttackRange;
+    public float dashSpeed;
 
     void Start()
     {
-        // Randomize starting roam direction
-        if (Random.value > 0.5f) roamDirection = Vector2.left;
+        Enemy_RB = GetComponent<Rigidbody2D>();
+
+        if (Enemy_RB == null)
+            Debug.LogError("No Rigidbody2D found on " + gameObject.name);
+        if (GroundCheck == null)
+            Debug.LogError("GroundCheck GameObject is not assigned on " + gameObject.name);
     }
 
     void Update()
     {
-        switch (currentState)
+        if (isAttacking)
         {
-            case BeetleState.Roaming:
-                Roam();
-                break;
-            case BeetleState.Chasing:
-                Chase();
-                break;
+            return; // Don't interrupt attack state
         }
-
-        DetectPlayer();
-    }
-
-    void Roam()
-    {
-        rb.linearVelocity = new Vector2(roamSpeed * roamDirection.x, rb.linearVelocity.y);
-    }
-
-    void Chase()
-    {
-        float direction = Mathf.Sign(player.position.x - transform.position.x);
-        rb.linearVelocity = new Vector2(chaseSpeed * direction, rb.linearVelocity.y);
+        
+        if (isChasing)
+        {
+            ChasePlayer();
+        }
+        else
+        {
+            Roam();
+            DetectPlayer();
+        }
     }
 
     void DetectPlayer()
     {
-        if (player == null) return;
+        float distanceToPlayer = Vector2.Distance(transform.position, Player.position);
+        Vector2 directionToPlayer = (Player.position - transform.position).normalized;
+        Vector2 enemyFacingDirection = FacingRight ? Vector2.right : Vector2.left;
 
-        float distance = Vector2.Distance(transform.position, player.position);
+        float dot = Vector2.Dot(directionToPlayer, enemyFacingDirection);
 
-        if (distance < attackRange && canDash)
+        if (distanceToPlayer <= DetectionRange && dot > 0.5f)
         {
-            StartCoroutine(DashAttack());
+            Debug.Log("Player spotted! Switching to Chase Mode!");
+            isChasing = true;
+            timeSinceLastSeen = 0f;
         }
-        else if (distance < detectionRange)
+    }
+
+    void ChasePlayer()
+    {
+        float distanceToPlayer = Vector2.Distance(transform.position, Player.position);
+        
+        if (distanceToPlayer > DetectionRange) 
         {
-            currentState = BeetleState.Chasing;
+            // Lost sight of the player? Start the countdown to give up.
+            timeSinceLastSeen += Time.deltaTime;
+
+            IsGrounded = GroundCheck != null && Physics2D.OverlapCircle(GroundCheck.transform.position, CircleRadius, GroundLayer);
+            if (IsGrounded){
+               // Move towards the player
+            float chase_Direction = (Player.position.x > transform.position.x) ? 1f : -1f;
+            Enemy_RB.linearVelocity = new Vector2(chase_Direction * Movement_speed, Enemy_RB.linearVelocity.y);
+
+            // Flip direction if needed
+            if ((chase_Direction > 0 && !FacingRight) || (chase_Direction < 0 && FacingRight))
+            {
+                Flip();
+            }     
+            }
+
+            if (timeSinceLastSeen >= lostPlayerTime)
+            {
+                isChasing = false;
+                timeSinceLastSeen = 0f;
+                ReturnToRoam();
+            }
+            return;
+        }
+        
+        if (distanceToPlayer > AttackRange)
+        {
+            
+            
+            // Move towards the player
+            float chaseDirection = (Player.position.x > transform.position.x) ? 1f : -1f;
+            Enemy_RB.linearVelocity = new Vector2(chaseDirection * Movement_speed, Enemy_RB.linearVelocity.y);
+
+            // Flip direction if needed
+            if ((chaseDirection > 0 && !FacingRight) || (chaseDirection < 0 && FacingRight))
+            {
+                Flip();
+            }
         }
         else
         {
-            currentState = BeetleState.Roaming;
+            // Stop and attack when in range
+            Enemy_RB.linearVelocity = Vector2.zero;
+            isChasing = false;
+            isAttacking = true;
+            StartCoroutine(ChargeAndAttack());
         }
     }
 
-    IEnumerator DashAttack()
+    IEnumerator ChargeAndAttack()
     {
-        canDash = false;
-        currentState = BeetleState.Dashing;
+        Debug.Log("Charging attack!");
 
-        float direction = Mathf.Sign(player.position.x - transform.position.x);
-        rb.linearVelocity = new Vector2(dashSpeed * direction, 0);
+        // Store the player's position at the moment of charging
+        Vector2 targetPosition = Player.position;
 
-        yield return new WaitForSeconds(dashDuration);
+        yield return new WaitForSeconds(0.2f); // Charging for 0.2s
 
-        rb.linearVelocity = Vector2.zero;
-        currentState = BeetleState.Chasing;
+        // Determine dash direction based on stored position
+        float dashDirection = (targetPosition.x > transform.position.x) ? 1f : -1f;
+        Enemy_RB.linearVelocity = new Vector2(dashDirection * dashSpeed, Enemy_RB.linearVelocity.y);
 
-        yield return new WaitForSeconds(dashCooldown);
-        canDash = true;
+        yield return new WaitForSeconds(0.2f); // Dash duration
+
+        // Stop movement completely
+        Enemy_RB.linearVelocity = Vector2.zero;
+
+        yield return new WaitForSeconds(0.5f); // Pause for 0.5s after dash
+
+        isAttacking = false; // Reset attack state
+        isChasing = true; // Resume chasing if player is still detected
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    void Roam()
     {
-        if (currentState == BeetleState.Dashing && collision.gameObject.CompareTag("Player"))
+        if (isChasing || isAttacking)
+            return;
+
+        Enemy_RB.linearVelocity = new Vector2((FacingRight ? 1 : -1) * Movement_speed, Enemy_RB.linearVelocity.y);
+        IsGrounded = GroundCheck != null && Physics2D.OverlapCircle(GroundCheck.transform.position, CircleRadius, GroundLayer);
+
+        if (!IsGrounded)
+            Flip();
+    }
+
+    void ReturnToRoam()
+    {
+        Debug.Log("back to roam");
+        isChasing = false;
+        isAttacking = false;
+        Enemy_RB.linearVelocity = Vector2.zero;
+        Roam();
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (GroundCheck != null)
         {
-            // Damage player
-            Debug.Log("Beetle hit the player!");
-            // Implement your damage logic here
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(GroundCheck.transform.position, CircleRadius);
+            
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, DetectionRange);
+
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(transform.position, AttackRange);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, DetectionRange + 4f); // Chase range visualization
         }
-        else if (collision.gameObject.CompareTag("Wall"))
+    }
+
+    void Flip()
+    {
+        FacingRight = !FacingRight;
+        transform.Rotate(0, 180, 0);
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        player_Attributes player = other.GetComponentInParent<player_Attributes>();
+
+        if (player != null)
         {
-            roamDirection *= -1; // Reverse direction if hitting a wall
+            Vector2 knockbackDirection = (other.transform.position - transform.position).normalized;
+            knockbackDirection.y = Mathf.Abs(knockbackDirection.y) + 0.5f;
+            knockbackDirection.Normalize();
+            player.DamagePlayer(20, knockbackDirection);
         }
     }
 }
